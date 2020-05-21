@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "reactapp.name" . }}
+  labels:
+    app: {{ template "reactapp.name" . }}
+    chart: {{ template "bank-operations.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.apps.reactapp.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "reactapp.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "reactapp.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.apps.reactapp.repository }}:{{ .Values.apps.reactapp.tag }}
+          imagePullPolicy: {{ .Values.apps.pullPolicy }}
+          env:
+            - name: KEYCLOAK
+              value: {{ printf "%s:%s/%s" (include "keycloak.fullname" .) .Values.keycloak.httpPort .Values.keycloak.basePath }}
+            - name: BACKEND
+              value: {{ printf "%s:%s" .Values.service.springapp.name .Values.service.springapp.externalPort }}
+          ports:
+            - containerPort: {{ .Values.service.reactapp.internalPort }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.reactapp.internalPort }}
+            initialDelaySeconds: 15
+            periodSeconds: 20  
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+    {{- end }}

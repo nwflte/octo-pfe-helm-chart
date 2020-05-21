@@ -1,0 +1,12 @@
+dependencies:
+- name: postgresql
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  version: 8.6.4
+- name: rabbitmq
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  version: 6.18.2
+- name: keycloak
+  repository: https://codecentric.github.io/helm-charts
+  version: 8.1.0
+digest: sha256:d06827293248136f98f38539807ce3c10c3a97e71aa0883306c28ee924596fa7
+generated: "2020-05-19T01:27:08.074901068Z"

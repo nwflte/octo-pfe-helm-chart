@@ -1,0 +1,15 @@
+
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Values.ingress.reactapp.name }}
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /reactapp
+        backend:
+          serviceName: {{ .Values.service.reactapp.name }}
+          servicePort: {{ .Values.service.reactapp.externalPort }}

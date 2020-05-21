@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "springapp.name" . }}
+  labels:
+    app: {{ template "springapp.name" . }}
+    chart: {{ template "bank-operations.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.apps.springapp.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "springapp.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      name: bank-backend
+      labels:
+        app: {{ template "springapp.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.apps.springapp.repository }}:{{ .Values.apps.springapp.tag }}
+          imagePullPolicy: {{ .Values.apps.pullPolicy }}
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.apps.springapp.springActiveProfiles }}
+            - name: SERVER_PORT
+              value: {{ .Values.service.springapp.internalPort | quote }}
+            - name: SPRING_RABBITMQ_HOST
+              value: {{ template "rabbitmq.fullname" . }}
+            - name: SPRING_RABBITMQ_USERNAME
+              value: {{ .Values.rabbitmq.rabbitmq.username }}
+            - name: SPRING_RABBITMQ_PASSWORD
+              value: {{ .Values.rabbitmq.rabbitmq.password }}
+            - name: SPRING_DATASOURCE_URL
+              value: 
+                {{ "jdbc:postgresql://"}}{{include "postgresql.fullname" .}}:{{.Values.postgresql.service.port}}{{"/backend"}}
+            - name: SPRING_DATASOURCE_USERNAME
+              value: {{ .Values.postgresql.postgresqlUsername }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: {{ .Values.postgresql.postgresqlPassword }}
+            - name: keycloak.auth-server-url
+              value: 
+                {{ "http://"}}{{include "keycloak.fullname" .}}:{{.Values.keycloak.service.httpPort}}/{{.Values.keycloak.basePath}}
+          ports:
+            - containerPort: {{ .Values.service.springapp.internalPort }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+    {{- end }}
