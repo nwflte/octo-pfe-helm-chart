@@ -31,21 +31,20 @@ spec:
             - name: SERVER_PORT
               value: {{ .Values.service.springapp.internalPort | quote }}
             - name: SPRING_RABBITMQ_HOST
-              value: {{ template "rabbitmq.fullname" . }}
+              #value: {{ template "rabbitmq.fullname" . }}
+              value: {{ .Values.service.rabbitmq.name }}
             - name: SPRING_RABBITMQ_USERNAME
               value: {{ .Values.rabbitmq.rabbitmq.username }}
             - name: SPRING_RABBITMQ_PASSWORD
               value: {{ .Values.rabbitmq.rabbitmq.password }}
             - name: SPRING_DATASOURCE_URL
-              value: 
-                {{ "jdbc:postgresql://"}}{{include "postgresql.fullname" .}}:{{.Values.postgresql.service.port}}{{"/backend"}}
+              value: {{ printf "jdbc:postgresql://%s:%d/%s" (include "postgresql.fullname" .) (.Values.postgresql.service.port | int) .Values.apps.springapp.database }}
             - name: SPRING_DATASOURCE_USERNAME
               value: {{ .Values.postgresql.postgresqlUsername }}
             - name: SPRING_DATASOURCE_PASSWORD
               value: {{ .Values.postgresql.postgresqlPassword }}
             - name: keycloak.auth-server-url
-              value: 
-                {{ "http://"}}{{include "keycloak.fullname" .}}:{{.Values.keycloak.service.httpPort}}/{{.Values.keycloak.basePath}}
+              value: {{ printf "http://%s-http:%d/%s" (include "keycloak.fullname" .) (.Values.keycloak.keycloak.service.httpPort | int) .Values.keycloak.keycloak.basePath }}
           ports:
             - containerPort: {{ .Values.service.springapp.internalPort }}
           resources:

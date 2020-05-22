@@ -26,9 +26,9 @@ spec:
           imagePullPolicy: {{ .Values.apps.pullPolicy }}
           env:
             - name: KEYCLOAK
-              value: {{ printf "%s:%s/%s" (include "keycloak.fullname" .) .Values.keycloak.httpPort .Values.keycloak.basePath }}
+              value: {{ printf "http://%s:%d/%s" (index .Values.keycloak.keycloak.ingress.hosts 0) 80 .Values.keycloak.keycloak.basePath }}
             - name: BACKEND
-              value: {{ printf "%s:%s" .Values.service.springapp.name .Values.service.springapp.externalPort }}
+              value: {{ printf "http://%s:%d" .Values.service.springapp.name (.Values.service.springapp.externalPort | int ) }}
           ports:
             - containerPort: {{ .Values.service.reactapp.internalPort }}
           livenessProbe:

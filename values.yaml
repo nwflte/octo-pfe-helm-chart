@@ -48,44 +48,60 @@ service:
     protocol: TCP
     externalPort: 8081
     internalPort: 8081
+  rabbitmq:
+    name: rabbitmq-service
+    type: NodePort
+    protocol: TCP
+    externalPort: 5672
+    internalPort: 5672
 
 ingress:
   reactapp:
     name: react-ingress
+    path: /
+    host: react.example.com
 
 
 keycloak:
-  service:
-    httpPort: 80
-  basePath: auth
-  password: keycloak
-  persistence:
+  keycloak:
+    service:
+      httpPort: 80
+    ingress:
+      enabled: true
+      hosts:
+        - keycloak.example.com
 
-    # Disable deployment of the PostgreSQL chart
-    deployPostgres: false
+    basePath: auth
+    password: keycloak
+    persistence:
 
-    dbVendor: postgres
+      # Disable deployment of the PostgreSQL chart
+      deployPostgres: false
 
-    ## The following values only apply if "deployPostgres" is set to "false"
-    dbName: keycloak
-    dbHost: postgresql
-    dbPort: 5432
-    dbUser: keycloak
+      dbVendor: postgres
 
-    # Only used if no existing secret is specified. In this case a new secret is created
-    dbPassword: password
+      ## The following values only apply if "deployPostgres" is set to "false"
+      dbName: keycloak
+      # The Postgres service name is defined in template helper : .Release.Name-"postgresql"
+      # use "helm install bank ." or you must change dbHost with the release name "helm install my-release-name ."
+      dbHost: bank-postgresql 
+      dbPort: 5432
+      dbUser: postgres
 
-  extraVolumes: |
-    - name: realm-secret
-      secret:
-        secretName: realm-secret
+      # Only used if no existing secret is specified. In this case a new secret is created
+      dbPassword: password
 
-  extraVolumeMounts: |
-    - name: realm-secret
-      mountPath: "/realm/"
-      readOnly: true
+    extraVolumes: |
+      - name: realm-secret
+        secret:
+          secretName: realm-secret
 
-  extraArgs: -Dkeycloak.import=/realm/realm.json
+    extraVolumeMounts: |
+      - name: realm-secret
+        mountPath: "/realm/"
+        readOnly: true
+
+    extraArgs: -Dkeycloak.import=/realm/realm.json
 
 #override settings for the postgresql chart
 postgresql:
@@ -104,7 +120,7 @@ postgresql:
         local database=$1
         echo "  Creating user and database '$database'"
         psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
-            CREATE USER $database;
+            CREATE USER $database WITH PASSWORD 'password';
             CREATE DATABASE $database;
             GRANT ALL PRIVILEGES ON DATABASE $database TO $database;
       EOSQL
@@ -122,12 +138,12 @@ postgresql:
 
 
 rabbitmq:
-  service:
-    type: NodePort
-  volumePermissions:
-    enabled: true
-    image:
-      pullPolicy: IfNotPresent
+  repository: rabbitmq
+  tag: "3-management"
+  replicaCount: 1
+  pullPolicy: IfNotPresent
+
   rabbitmq:
-    username: admin
-    password: secretpassword
+    username: guest
+    password: guest
+    defaultVhost: banka

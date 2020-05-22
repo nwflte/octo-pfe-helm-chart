@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "rabbitmq.name" . }}
+  labels:
+    app: {{ template "rabbitmq.name" . }}
+    chart: {{ template "bank-operations.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.rabbitmq.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "rabbitmq.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      name: bank-backend
+      labels:
+        app: {{ template "rabbitmq.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.rabbitmq.repository }}:{{ .Values.rabbitmq.tag }}
+          imagePullPolicy: {{ .Values.rabbitmq.pullPolicy }}
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: {{ .Values.rabbitmq.rabbitmq.username }}
+            - name: RABBITMQ_DEFAULT_PASS
+              value: {{ .Values.rabbitmq.rabbitmq.password }}
+            - name: RABBITMQ_DEFAULT_VHOST
+              value: {{ .Values.rabbitmq.rabbitmq.defaultVhost }}
+          ports:
+            - containerPort: {{ .Values.service.rabbitmq.internalPort }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+    {{- end }}
