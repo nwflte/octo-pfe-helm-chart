@@ -33,7 +33,7 @@ apps:
     repository: naoufal450/react-app
     tag: "latest"
     replicaCount: 1
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 service:
   reactapp:
