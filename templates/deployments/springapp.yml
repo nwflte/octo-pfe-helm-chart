@@ -27,11 +27,10 @@ spec:
           imagePullPolicy: {{ .Values.apps.pullPolicy }}
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: {{ .Values.apps.springapp.springActiveProfiles }}
+              value: docker, {{ .Values.apps.springapp.springActiveProfiles }}
             - name: SERVER_PORT
               value: {{ .Values.service.springapp.internalPort | quote }}
             - name: SPRING_RABBITMQ_HOST
-              #value: {{ template "rabbitmq.fullname" . }}
               value: {{ .Values.service.rabbitmq.name }}
             - name: SPRING_RABBITMQ_USERNAME
               value: {{ .Values.rabbitmq.rabbitmq.username }}
@@ -44,7 +43,8 @@ spec:
             - name: SPRING_DATASOURCE_PASSWORD
               value: {{ .Values.postgresql.postgresqlPassword }}
             - name: keycloak.auth-server-url
-              value: {{ printf "http://%s-http:%d/%s" (include "keycloak.fullname" .) (.Values.keycloak.keycloak.service.httpPort | int) .Values.keycloak.keycloak.basePath }}
+              #value: {{ printf "http://%s-http:%d/%s" (include "keycloak.fullname" .) (.Values.keycloak.keycloak.service.httpPort | int) .Values.keycloak.keycloak.basePath }}
+              value: {{ printf "http://%s:%d/%s" (index .Values.keycloak.keycloak.ingress.hosts 0) 80 .Values.keycloak.keycloak.basePath }}
           ports:
             - containerPort: {{ .Values.service.springapp.internalPort }}
           resources:

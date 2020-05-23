@@ -90,6 +90,18 @@ Create the name of the service account to use
 {{- if .Values.serviceAccount.create }}
 {{- default (include "bank-operations.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
+
+
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+
+
+{{/*
+Generate our dbHost URL for Keycloak. 
+*/}}
+{{- define "keycloak.keycloak.persistence.dbHost" -}}
+{{- printf "%s-postgresql" .Release.Name -}}
+{{- end -}}
+
